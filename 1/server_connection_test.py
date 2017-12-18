@@ -4,7 +4,7 @@ from socket import *
 
 
 authuser = {'account_name': 'JohnDoe',
-            'password': 'somepassword'}
+            'password': 'qwerty'}
 authmsg = {'action': 'authenticate',
            'timestamp': 0,
            'user': authuser}
@@ -21,3 +21,5 @@ authmsg['timestamp'] = int(time.time())
 s.connect(('localhost', 7777))
 s.send(json.dumps(authmsg).encode('ascii'))
 
+response = json.loads(s.recv(1024).decode('ascii'))
+print('Server response {}'.format(response))
