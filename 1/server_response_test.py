@@ -3,7 +3,11 @@ import time
 from server import auth_user
 from server import disconnect_user
 from server import handle_presence
+from server import send_message
+from server import join_chat
+from server import leave_chat
 from server import users_online
+from server import chatlist
 
 
 class ResponseTest(unittest.TestCase):
@@ -86,6 +90,63 @@ class ResponseTest(unittest.TestCase):
                'type': 'status',
                'user': user}
         self.assertEqual(handle_presence(msg), {'response': 200, 'alert': 'guest user, restricted access'})
+
+    def test_message_to_user_online(self):
+        if 'JohnDoe' not in users_online:
+            users_online.append('JohnDoe')
+        msg = {'action': 'msg',
+               'time': int(time.time()),
+               'to': 'JohnDoe',
+               'from': 'JohnDoe',
+               'encoding': 'ascii',
+               'message': 'Test message for user'}
+        self.assertEqual(send_message(msg), {'response': 200, 'alert': 'message sent to user'})
+
+    def test_message_to_user_offline(self):
+        if 'JohnDoe' in users_online:
+            users_online.remove('JohnDoe')
+        msg = {'action': 'msg',
+               'time': int(time.time()),
+               'to': 'JohnDoe',
+               'from': 'JohnDoe',
+               'message': 'Test message for user'}
+        self.assertEqual(send_message(msg), {'response': 404, 'error': 'user or chat not found'})
+
+    def test_message_to_chat_exist(self):
+        if '#testchat' not in chatlist:
+            chatlist['#testchat'] = ['JohnDoe']
+        msg = {'action': 'msg',
+               'time': int(time.time()),
+               'to': '#testchat',
+               'from': 'JohnDoe',
+               'message': 'Test message for user'}
+        self.assertEqual(send_message(msg), {'response': 200, 'alert': 'message sent to chat'})
+
+    def test_message_to_chat_not_exist(self):
+        msg = {'action': 'msg',
+               'time': int(time.time()),
+               'to': '#not_existed',
+               'from': 'JohnDoe',
+               'message': 'Test message for user'}
+        self.assertEqual(send_message(msg), {'response': 404, 'error': 'user or chat not found'})
+
+    def test_join_chat(self):
+        user = {'account_name': 'JohnDoe'}
+        msg = {'action': 'join',
+               'time': int(time.time()),
+               'room': '#testroom',
+               'user': user}
+        self.assertEqual(join_chat(msg), {'response': 200, 'alert': 'new chatroom joined'})
+
+    def test_leave_chat(self):
+        chatlist['#testroom2'] = ['JohnDoe',]
+        user = {'account_name': 'JohnDoe'}
+        msg = {'action': 'join',
+               'time': int(time.time()),
+               'room': '#testroom2',
+               'user': user}
+        self.assertEqual(leave_chat(msg), {'response': 200, 'alert': 'leaving chatroom'})
+
 
 if __name__ == '__main__':
     unittest.main()

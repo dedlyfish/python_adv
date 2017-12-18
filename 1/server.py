@@ -2,20 +2,24 @@ import time
 import json
 from socket import *
 
+# подобие БД
 accounts = {'JohnDoe': 'qwerty',
             'andrey': '12345'}
 PORT = 7777
 ADDR = ''
 users_online = []
+chatlist = {}
 
 
 def response_alert(code, alert):
     # сформируем информационное сообщение
     return {'response': code, 'alert': alert}
 
+
 def response_error(code, error):
     # сформируем сообщение об ошибке
     return {'response': code, 'error': error}
+
 
 def auth_user(msg):
     username = msg['user']['account_name']
@@ -56,8 +60,47 @@ def handle_presence(msg):
     return response_alert(200, 'guest user, restricted access')
 
 
+def send_message_to_chat(msg):
+    # TODO: пока что тут просто заглушка
+    print('[*] send to chat {} message: {}'.format(msg['to'], msg['message']))
+
+
+def send_message_to_user(msg):
+    # TODO: пока что тут просто заглушка
+    print('[*] send to user {} message: {}'.format(msg['to'], msg['message']))
+
+
 def send_message(msg):
-    pass
+    username = msg['from']
+    chat = msg['to']
+    if chat.startswith('#') and chatlist.get(chat):
+        # отправим сообщение в чат
+        send_message_to_chat(msg)
+        return response_alert(200, 'message sent to chat')
+    elif not chat.startswith('#') and username in users_online:
+        # отправим сообщение пользователю
+        send_message_to_user(msg)
+        return response_alert(200, 'message sent to user')
+    else:
+        # такого чата или пользователя на сервере нет
+        return response_error(404, 'user or chat not found')
+
+
+def join_chat(msg):
+    username = msg['user']['account_name']
+    room = msg['room']
+    if chatlist.get(room):
+        chatlist[room].append(msg[username])
+    else:
+        chatlist[room] = [username,]
+    return response_alert(200, 'new chatroom joined')
+
+
+def leave_chat(msg):
+    username = msg['user']['account_name']
+    room = msg['room']
+    chatlist[room].remove(username)
+    return response_alert(200, 'leaving chatroom')
 
 
 if __name__ == '__main__':
@@ -85,7 +128,7 @@ if __name__ == '__main__':
                 response = handle_presence(data)
             elif data['action'] == 'msg':
                 print('[*] send message to user or chat')
-                client.send('data'.encode('ascii'))
+                response = send_message(data)
             elif data['action'] == 'quit':
                 print('[*] disconnect')
                 response = disconnect_user(data)
