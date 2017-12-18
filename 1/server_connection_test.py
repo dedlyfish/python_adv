@@ -6,14 +6,14 @@ from socket import *
 authuser = {'account_name': 'JohnDoe',
             'password': 'qwerty'}
 authmsg = {'action': 'authenticate',
-           'timestamp': 0,
+           'time': 0,
            'user': authuser}
-probeuser = {'account_name': 'JohnDoe',
+presenceuser = {'account_name': 'JohnDoe',
              'status': "Yep, I'm here"}
-probemsg = {'action': 'probe',
+presencemsg = {'action': 'probe',
             'time': 0,
             'type': 'status',
-            'user': probeuser}
+            'user': presenceuser}
 quitmsg = {'action': 'quit'}
 
 s = socket(AF_INET, SOCK_STREAM)
