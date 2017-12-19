@@ -15,49 +15,65 @@ class JimServer:
         self.socket.listen(clients)
         print('[*] server listening on {}:{}'.format(bind_addr, bind_port))
 
-    def _response_alert(self, code, alert):
-        return {'response': code, 'alert': alert}
-
-    def _response_error(self, code, error):
-        return {'response': code, 'error': error}
+    def _response(self, code, alert=None, error=None):
+        r = dict()
+        r['response'] = code
+        r['time'] = int(time.time())
+        if alert:
+            r['alert'] = alert
+        if error:
+            r['error'] = error
+        return r
 
     def _handle_presence(self, msg):
         username = msg['user']['account_name']
         print('[*] user {} sent presence message'.format(username))
-        return self._response_alert(JIM_OK, 'presence accepted')
+        return self._response(JIM_OK, alert='presence accepted')
 
     def runserver(self):
         while True:
-            client, addr = self.socket.accept()
-            print('[*] connect from {}'.format(addr))
-            data = json.loads(client.recv(1024).decode('ascii'))
-            print('[*] recieved message {}'.format(data))
-            if data['action'] == 'presence':
-                response = self._handle_presence(data)
-            else:
-                response = self._response_error(JIM_INVALID_REQUEST, 'unknown action')
-            response['time'] = int(time.time())
-            print('[*] sending to client message: {}'.format(response))
-            client.send(json.dumps(response).encode('ascii'))
-            client.close()
+            try:
+                client, addr = self.socket.accept()
+                print('[*] connect from {}'.format(addr))
+                data = json.loads(client.recv(1024).decode('ascii'))
+                print('[*] recieved message {}'.format(data))
+                if data['action'] == 'presence':
+                    response = self._handle_presence(data)
+                else:
+                    response = self._response(JIM_INVALID_REQUEST, error='unknown action')
+                print('[*] sending to client message: {}'.format(response))
+                client.send(json.dumps(response).encode('ascii'))
+                client.close()
+            except KeyboardInterrupt:
+                print('[*] server shutdown')
+                self.socket.close()
+                sys.exit(0)
 
 
-ADDR = ''
-PORT = 7777
-CLIENTS = 5
-
-if __name__ == '__main__':
+def get_parameters(arguments):
+    address = ''
+    port = 7777
+    num_clients = 5
+    usage = 'usage:\npython server.py --help --address=<bindaddr> --port=<port> --clients=<number of clients>'
     try:
-        args, opts = getopt.getopt(sys.argv[1:], 'h:p:c:', ['host=', 'port=', 'clients='])
+        args, opts = getopt.getopt(arguments, 'a:p:c:h', ['addr=', 'port=', 'clients=', 'help'])
     except getopt.GetoptError as err:
         print(err)
-        print('usage:\npython server.py --host=<bindaddr> --port=<port> --clients=<number of clients>')
+        print(usage)
+        sys.exit(0)
     for o, a in args:
-        if o in ('-h', '--host'):
-            ADDR = a
+        if o in ('-a', '--addr'):
+            address = a
         elif o in ('-p', '--port'):
-            PORT = a
+            port = a
         elif o in ('-c', '--clients'):
-            CLIENTS = a
-    server = JimServer(ADDR, PORT, CLIENTS)
+            num_clients = a
+        elif o in ('-h', '--help'):
+            print(usage)
+    return address, int(port), int(num_clients)
+
+
+if __name__ == '__main__':
+    addr, port, clients = get_parameters(sys.argv[1:])
+    server = JimServer(addr, port, clients)
     server.runserver()

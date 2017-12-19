@@ -13,12 +13,21 @@ class JimClient:
         self.port = port
         self.socket = socket(AF_INET, SOCK_STREAM)
 
+    def _parse_response(self, r):
+        msg = ''
+        if r.get('alert'):
+            msg = r['alert']
+        elif r.get('error'):
+            msg = r['error']
+        return r['response'], r['time'], msg
+
     def _send_message(self, msg):
         self.socket.connect((self.host, self.port))
         print('[*] sending message {}'.format(msg))
         self.socket.send(json.dumps(msg).encode('ascii'))
         response = json.loads(self.socket.recv(1024).decode('ascii'))
-        print('[*] server response {}'.format(response))
+        code, timestamp, msg = self._parse_response(response)
+        print('[*] server response: code={}, time={}, message "{}"'.format(code, timestamp, msg))
         self.socket.close()
 
     def send_presence(self):
@@ -30,14 +39,14 @@ class JimClient:
         self._send_message(presence_message)
 
 
-if __name__ == '__main__':
+def get_parameters(arguments):
     username = None
     password = None
     message = None
     host = 'localhost'
     port = 7777
     try:
-        args, opts = getopt.getopt(sys.argv[1:], 'u:s:m:h:p', ['username=', 'secret=', 'message=', 'host=', 'port='])
+        args, opts = getopt.getopt(arguments, 'u:s:m:h:p', ['username=', 'secret=', 'message=', 'host=', 'port='])
     except getopt.GetoptError as err:
         print(err)
         print('usage:\npython client.py --username=<name> --secret=<password> --message=<message>' +
@@ -53,6 +62,10 @@ if __name__ == '__main__':
             host = a
         elif o in ('-p', '--port'):
             port = a
+    return username, password, message, host, int(port)
+
+if __name__ == '__main__':
+    username, password, message, host, port = get_parameters(sys.argv[1:])
     if (username and password and message) is None:
         print('Not enough parameters, exiting.')
         print('usage:\npython client.py --username=<name> --secret=<password> --message=<message>' +
