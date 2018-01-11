@@ -16,7 +16,7 @@ crit_handler = logging.StreamHandler(sys.stderr)
 crit_handler.setLevel(logging.CRITICAL)
 crit_handler.setFormatter(format)
 
-info_handler = logging.handlers.TimedRotatingFileHandler('messanger.log', when='D')
+info_handler = logging.handlers.TimedRotatingFileHandler('messenger.log', when='D')
 info_handler.setFormatter(format)
 
 server_log = logging.getLogger('server')
