@@ -3,18 +3,38 @@ import time
 import json
 import getopt
 from socket import *
+import logging
+from log_config import log
 
 JIM_OK = 200
 JIM_INVALID_REQUEST = 400
 
+server_log = logging.getLogger('server')
+
+
+def srvlog(foo):
+    def wrapper(*args, **kwargs):
+        server_log.info('SERVER LOG')
+        return foo(*args, **kwargs)
+    return wrapper
+
 
 class JimServer:
+    @srvlog
+    @log
     def __init__(self, bind_addr, bind_port, clients):
         self.socket = socket(AF_INET, SOCK_STREAM)
-        self.socket.bind((bind_addr, bind_port))
+        try:
+            self.socket.bind((bind_addr, bind_port))
+        except:
+            server_log.critical('Binding address failure')
+            exit(0)
         self.socket.listen(clients)
-        print('[*] server listening on {}:{}'.format(bind_addr, bind_port))
+        server_log.info('[*] server listening on {}:{}'.format(bind_addr, bind_port))
 
+
+    @srvlog
+    @log
     def _response(self, code, alert=None, error=None):
         r = dict()
         r['response'] = code
@@ -25,31 +45,38 @@ class JimServer:
             r['error'] = error
         return r
 
+
+    @srvlog
+    @log
     def _handle_presence(self, msg):
         username = msg['user']['account_name']
-        print('[*] user {} sent presence message'.format(username))
+        server_log.info('[*] user {} sent presence message'.format(username))
         return self._response(JIM_OK, alert='presence accepted')
 
+
+    @srvlog
+    @log
     def runserver(self):
         while True:
             try:
                 client, addr = self.socket.accept()
-                print('[*] connect from {}'.format(addr))
+                server_log.info('[*] connect from {}'.format(addr))
                 data = json.loads(client.recv(1024).decode('ascii'))
-                print('[*] recieved message {}'.format(data))
+                server_log.info('[*] recieved message {}'.format(data))
                 if data['action'] == 'presence':
                     response = self._handle_presence(data)
                 else:
                     response = self._response(JIM_INVALID_REQUEST, error='unknown action')
-                print('[*] sending to client message: {}'.format(response))
+                server_log.info('[*] sending to client message: {}'.format(response))
                 client.send(json.dumps(response).encode('ascii'))
                 client.close()
             except KeyboardInterrupt:
-                print('[*] server shutdown')
+                server_log.info('[*] server shutdown')
                 self.socket.close()
                 sys.exit(0)
 
-
+@srvlog
+@log
 def get_parameters(arguments):
     address = ''
     port = 7777

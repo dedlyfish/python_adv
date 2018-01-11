@@ -1,13 +1,13 @@
 import unittest
 import time
-from server import auth_user
-from server import disconnect_user
-from server import handle_presence
-from server import send_message
-from server import join_chat
-from server import leave_chat
-from server import users_online
-from server import chatlist
+from server_traditional import auth_user
+from server_traditional import disconnect_user
+from server_traditional import handle_presence
+from server_traditional import send_message
+from server_traditional import join_chat
+from server_traditional import leave_chat
+from server_traditional import users_online
+from server_traditional import chatlist
 
 
 class ResponseTest(unittest.TestCase):
