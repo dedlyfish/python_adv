@@ -39,6 +39,14 @@ class JimClient:
         self._send_message(presence_message)
 
 
+    def send_chat(self, chat, message):
+        chat_message = {'action': 'msg',
+                        'time': int(time.time()),
+                        'to': chat,
+                        'from': self.user,
+                        'message': message}
+        self._send_message(chat_message)
+
 def get_parameters(arguments):
     username = None
     password = None

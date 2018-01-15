@@ -9,14 +9,14 @@ def log(foo):
             return foo(*args, **kwargs)
     return wrapper
 
-
+logfile = 'messenger.log'
 format = logging.Formatter('%(asctime)s:%(levelname)s:%(module)s:%(message)s')
 
 crit_handler = logging.StreamHandler(sys.stderr)
 crit_handler.setLevel(logging.CRITICAL)
 crit_handler.setFormatter(format)
 
-info_handler = logging.handlers.TimedRotatingFileHandler('messenger.log', when='D')
+info_handler = logging.handlers.TimedRotatingFileHandler(logfile, when='D')
 info_handler.setFormatter(format)
 
 server_log = logging.getLogger('server')
