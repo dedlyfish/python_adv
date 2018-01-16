@@ -23,6 +23,7 @@ class JimServer:
             server_log.critical('Binding address failure')
             exit(0)
         self.socket.listen(clients)
+        self.socket.settimeout(0.2)
         server_log.info('[*] server listening on {}:{}'.format(bind_addr, bind_port))
         self.connections = []
 
@@ -47,33 +48,19 @@ class JimServer:
 
 
     @log
-    def read_requests(self):
-        responses = dict()
-        for sock in self.connections:
+    def read_requests(self, r, w):
+        for sock in r:
             try:
                 data = json.loads(sock.recv(1024).decode('ascii'))
                 server_log.info('[*] recieved message {}'.format(data))
                 if data['action'] == 'presence':
-                    responses[sock] = self._handle_presence(data)
-                else:
-                    responses[sock] = self._response(JIM_INVALID_REQUEST, error='unknown action')
+                    sock.send(json.dumps(self._handle_presence(data)).encode('ascii'))
+                elif data['action'] == 'msg':
+                    for s in w:
+                        s.send(json.dumps(data).encode('ascii'))
             except:
-                server_log.info('[*] client {} {} disconnected'.format(sock.fileno(), sock.getpeername()))
+                sock.close()
                 self.connections.remove(sock)
-        return responses
-
-
-    @log
-    def write_responses(self, responses):
-        for sock in self.connections:
-            if sock in responses:
-                try:
-                    server_log.info('[*] sending to client message: {}'.format(responses[sock]))
-                    sock.send(json.dumps(responses[sock]).encode('ascii'))
-                except:
-                    server_log.info('[*] client {} {} disconnected'.format(sock.fileno(), sock.getpeername()))
-                    sock.close()
-                    self.connections.remove(sock)
 
 
     @log
@@ -81,10 +68,8 @@ class JimServer:
         while True:
             try:
                 client, addr = self.socket.accept()
-            except KeyboardInterrupt:
-                server_log.info('[*] server shutdown')
-                self.socket.close()
-                sys.exit(0)
+            except OSError as e:
+                pass
             else:
                 server_log.info('[*] connect from {}'.format(addr))
                 self.connections.append(client)
@@ -95,8 +80,8 @@ class JimServer:
                     r, w, e = select.select(self.connections, self.connections, [], wait)
                 except:
                     pass
-                requests = self.read_requests()
-                self.write_responses(requests)
+                self.read_requests(r, w)
+
 
 @log
 def get_parameters(arguments):
