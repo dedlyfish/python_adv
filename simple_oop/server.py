@@ -48,28 +48,31 @@ class JimServer:
 
 
     @log
-    def _send_to_all(self, msg):
-        for sock in self.connections:
-            try:
-                sock.send(msg)
-            except:
-                sock.close()
-                self.connections.remove(sock)
-
-
-    @log
     def _read_requests(self, r):
+        responses = []
         for sock in r:
             try:
                 data = json.loads(sock.recv(1024).decode('ascii'))
                 server_log.info('[*] recieved message {}'.format(data))
                 if data['action'] == 'presence':
-                    sock.send(json.dumps(self._handle_presence(data)).encode('ascii'))
+                    responses.append([sock, json.dumps(self._handle_presence(data)).encode('ascii')])
                 elif data['action'] == 'msg':
-                    self._send_to_all(json.dumps(data).encode('ascii'))
+                    for s in self.connections:
+                        responses.append([s, json.dumps(data).encode('ascii')])
             except:
                 sock.close()
                 self.connections.remove(sock)
+            return responses
+
+
+    @log
+    def _send_responses(self, r):
+        if r:
+            for sock, data in r:
+                try:
+                    sock.send(data)
+                except:
+                    self.connections.remove(sock)
 
 
     @log
@@ -89,7 +92,8 @@ class JimServer:
                     r, w, e = select.select(self.connections, self.connections, [], wait)
                 except:
                     pass
-                self._read_requests(r)
+                else:
+                    self._send_responses(self._read_requests(r))
 
 
 @log
