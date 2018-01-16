@@ -95,7 +95,7 @@ if __name__ == '__main__':
     if (username and password and message) is None:
         print('Not enough parameters, exiting.')
         print('usage:\npython client.py --username=<name> --secret=<password> --message=<message>' +
-              '[--host=<host>] [--port=<port>]')
+              '[--host=<host>] [--port=<port>] [-r] [-w]')
         sys.exit(0)
     client = JimClient(username, password, host, port)
     if direction == 'read':
