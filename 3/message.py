@@ -1,7 +1,7 @@
 import time
 
 
-class JimMessage():
+class JimMessage:
     def __init__(self, action, msg_to=None, msg_from=None, msg=None, room=None, user=None, type=None):
         self.message = dict()
         self.message['action'] = action
@@ -19,14 +19,12 @@ class JimMessage():
         else:
             raise ValueError
 
-
     def __make_presence(self, user, type=None):
         msg = dict()
         if type:
             msg['type'] = type
         msg['user'] = user
         return msg
-
 
     def __make_msg(self, msg_to, msg_from, message):
         msg = dict()
@@ -35,20 +33,15 @@ class JimMessage():
         msg['message'] = message
         return msg
 
-
     def __make_auth(self, user):
         msg = dict()
         msg['user'] = user
         return msg
-
 
     def __make_join_or_leave(self, room):
         msg = dict()
         msg['room'] = room
         return msg
 
-
     def encode(self):
         return self.message
-
-
