@@ -1,6 +1,7 @@
 import unittest
+import mock
+import socket
 from client import *
-
 
 clt = JimClient('JohnDoe', '1234', 'localhost', 7777)
 
@@ -21,6 +22,7 @@ class JimClientTest(unittest.TestCase):
     def test_parsing_alert(self):
         self.assertEqual(clt._parse_response({'response': 200, 'time': 1513664488, 'alert': 'presence accepted'}),
                          (200, 1513664488, 'presence accepted'))
+
 
 if __name__ == '__main__':
     unittest.main()
