@@ -20,28 +20,18 @@ class JimMessage:
             raise ValueError
 
     def __make_presence(self, user, type=None):
-        msg = dict()
         if type:
-            msg['type'] = type
-        msg['user'] = user
-        return msg
+            return {'type': type, 'user': user}
+        return {'user': user}
 
     def __make_msg(self, msg_to, msg_from, message):
-        msg = dict()
-        msg['to'] = msg_to
-        msg['from'] = msg_from
-        msg['message'] = message
-        return msg
+        return {'to': msg_to, 'from': msg_from, 'message': message}
 
     def __make_auth(self, user):
-        msg = dict()
-        msg['user'] = user
-        return msg
+        return {'user': user}
 
     def __make_join_or_leave(self, room):
-        msg = dict()
-        msg['room'] = room
-        return msg
+        return {'room': room}
 
     def encode(self):
         return self.message
