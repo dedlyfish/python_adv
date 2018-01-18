@@ -37,9 +37,12 @@ class JimMessage:
         return self.message
 
     def send_message(self, sock):
-        sock.send(json.dumps(self.message).encode('ascii'))
-        response = json.loads(sock.recv(1024).decode('ascii'))
-        return response
+        print('Sending {}'.format(self.message))
+        try:
+            sock.send(json.dumps(self.message).encode('ascii'))
+        except:
+            return None
+        return True
 
     def read_message(self, sock):
         message = json.loads(sock.recv(1024).decode('ascii'))
