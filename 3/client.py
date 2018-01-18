@@ -29,8 +29,7 @@ class JimClient:
         else:
             msg.compose('presence', type='status', user={'account_name': self.user, 'status': status})
         if msg.send_message(self.socket):
-            rsp.read_response(self.socket)
-            return rsp.encode()
+            return rsp.read_response(self.socket)
         return None
 
     def send_message(self, user, message):
@@ -38,6 +37,5 @@ class JimClient:
         rsp = JimResponse()
         msg.compose('msg', msg_to=user, msg_from=self.user, msg=message)
         if msg.send_message(self.socket):
-            rsp.read_response(self.socket)
-            return rsp.encode()
+            return rsp.read_response(self.socket)
         return None

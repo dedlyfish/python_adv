@@ -46,12 +46,12 @@ class JimMessage:
 
     def read_message(self, sock):
         message = json.loads(sock.recv(1024).decode('ascii'))
-        msg_to = message.get('to') or None
-        msg_from = message.get('from') or None
-        msg = message.get('msg') or None
-        room = message.get('room') or None
-        user = message.get('user') or None
-        type = message.get('type') or None
-        self.compose(message['action'], msg_to=msg_to, msg_from=msg_from, msg=msg,
-                     room=room, user=user, type=type)
+        params = []
+        for i in ('to', 'from', 'message', 'room', 'user', 'type'):
+            if message.get(i):
+                params.append(message[i])
+            else:
+                params.append(None)
+        self.compose(message['action'], msg_to=params[0], msg_from=params[1], msg=params[2],
+                     room=params[3], user=params[4], type=params[5])
         return self.message

@@ -14,13 +14,19 @@ class JimResponse:
         else:
             self.response['error'] = message
 
-    def encode(self):
-        return self.response
+    def send_response(self, sock):
+        print('Sending {}'.format(self.response))
+        sock.send(json.dumps(self.response).encode('ascii'))
 
     def read_response(self, sock):
-        r = json.loads(sock.recv(1024).decode('ascii'))
+        try:
+            r = json.loads(sock.recv(1024).decode('ascii'))
+        except:
+            print('Cant read')
+            return None
         self.response['response'] = r['response']
         if r.get('alert'):
             self.response['alert'] = r['alert']
         elif r.get('error'):
             self.response['error'] = r['error']
+        return self.response
