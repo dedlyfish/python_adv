@@ -1,8 +1,8 @@
 import time
-
+import json
 
 class JimMessage:
-    def __init__(self, action, msg_to=None, msg_from=None, msg=None, room=None, user=None, type=None):
+    def compose(self, action, msg_to=None, msg_from=None, msg=None, room=None, user=None, type=None):
         self.message = dict()
         self.message['action'] = action
         self.message['time'] = int(time.time())
@@ -34,4 +34,21 @@ class JimMessage:
         return {'room': room}
 
     def encode(self):
+        return self.message
+
+    def send_message(self, sock):
+        sock.send(json.dumps(self.message).encode('ascii'))
+        response = json.loads(sock.recv(1024).decode('ascii'))
+        return response
+
+    def read_message(self, sock):
+        message = json.loads(sock.recv(1024).decode('ascii'))
+        msg_to = message.get('to') or None
+        msg_from = message.get('from') or None
+        msg = message.get('msg') or None
+        room = message.get('room') or None
+        user = message.get('user') or None
+        type = message.get('type') or None
+        self.compose(message['action'], msg_to=msg_to, msg_from=msg_from, msg=msg,
+                     room=room, user=user, type=type)
         return self.message
