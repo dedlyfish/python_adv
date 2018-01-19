@@ -6,8 +6,8 @@ class JimTCPHandler(StreamRequestHandler):
     def handle(self):
         msg = JimMessage()
         rsp = JimResponse()
-        self.data = msg.read_message(self.request)
-        print(self.data)
+        data = msg.read_message(self.request)
+        print(data)
         rsp.compose(200, 'Test')
         rsp.send_response(self.request)
 

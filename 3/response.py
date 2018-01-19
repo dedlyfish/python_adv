@@ -16,7 +16,7 @@ class JimResponse:
 
     def send_response(self, sock):
         print('Sending {}'.format(self.response))
-        sock.send(json.dumps(self.response).encode('ascii'))
+        sock.sendall(json.dumps(self.response).encode('ascii'))
 
     def read_response(self, sock):
         try:

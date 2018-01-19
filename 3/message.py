@@ -38,20 +38,14 @@ class JimMessage:
 
     def send_message(self, sock):
         print('Sending {}'.format(self.message))
-        try:
-            sock.send(json.dumps(self.message).encode('ascii'))
-        except:
-            return None
+        sock.sendall(json.dumps(self.message).encode('ascii'))
         return True
 
     def read_message(self, sock):
         message = json.loads(sock.recv(1024).decode('ascii'))
         params = []
         for i in ('to', 'from', 'message', 'room', 'user', 'type'):
-            if message.get(i):
-                params.append(message[i])
-            else:
-                params.append(None)
+            params.append(message.get(i) or None)
         self.compose(message['action'], msg_to=params[0], msg_from=params[1], msg=params[2],
                      room=params[3], user=params[4], type=params[5])
         return self.message
