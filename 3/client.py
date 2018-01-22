@@ -30,3 +30,9 @@ class JimClient:
         if self.msg.send_message(self.socket):
             return self.rsp.read_response(self.socket)
         return None
+
+    def reading_loop(self):
+        msg = JimMessage()
+        while True:
+            data = msg.read_message(self.socket)
+            print(data)

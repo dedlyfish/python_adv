@@ -1,13 +1,10 @@
 from socketserver import *
 from message import JimMessage
 from response import JimResponse
+from chat import JimChat
 
-clients = []
 
-def send_all(msg):
-    for sock in clients:
-        msg.send_message(sock)
-
+chatroom = JimChat()
 
 class JimTCPHandler(StreamRequestHandler):
     def handle_input(self, input_msg):
@@ -21,8 +18,8 @@ class JimTCPHandler(StreamRequestHandler):
         return rsp
 
     def handle(self):
-        clients.append(self.request)
-        print('connected {}'.format(len(clients)))
+        chatroom.adduser(self.request)
+        print('connected {}'.format(chatroom.num_users()))
         while True:
             msg = JimMessage()
             rsp = JimResponse()
@@ -30,12 +27,15 @@ class JimTCPHandler(StreamRequestHandler):
                 data = msg.read_message(self.request)
                 print(data)
                 self.handle_input(data).send_response(self.request)
+                if data['action'] == 'msg':
+                    if data['to'].startswith('#'):
+                        chatroom.send_to_all(msg)
             except:
                 break
             del msg
             del rsp
         print('client disconnected')
-        clients.remove(self.request)
+        chatroom.deluser(self.request)
 
 
 class ThreadedTCPServer(ThreadingMixIn, TCPServer):
