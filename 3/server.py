@@ -1,8 +1,13 @@
+import argparse
 from socketserver import *
 from message import JimMessage
 from response import JimResponse
 from chat import JimChat
+import server_log
+import logging
 
+
+server_log = logging.getLogger('server')
 
 chatroom = JimChat()
 
@@ -19,22 +24,23 @@ class JimTCPHandler(StreamRequestHandler):
 
     def handle(self):
         chatroom.adduser(self.request)
-        print('connected {}'.format(chatroom.num_users()))
+        server_log.info('connected {} clients'.format(chatroom.num_users()))
         while True:
             msg = JimMessage()
             rsp = JimResponse()
             try:
                 data = msg.read_message(self.request)
-                print(data)
+                server_log.info('Received from client: {}'.format(data))
                 self.handle_input(data).send_response(self.request)
                 if data['action'] == 'msg':
                     if data['to'].startswith('#'):
+                        server_log.info('Sending message to chat {}'.format(data))
                         chatroom.send_to_all(msg)
             except:
                 break
             del msg
             del rsp
-        print('client disconnected')
+        server_log.info('client disconnected')
         chatroom.deluser(self.request)
 
 
@@ -43,6 +49,10 @@ class ThreadedTCPServer(ThreadingMixIn, TCPServer):
 
 
 if __name__ == '__main__':
-    server = ThreadedTCPServer(('127.0.0.1', 7777), JimTCPHandler)
-    print('started server')
+    parser = argparse.ArgumentParser(description='JIM server')
+    parser.add_argument('-a', action='store', dest='address', default='', help='server address')
+    parser.add_argument('-p', action='store', dest='port', type=int, default=7777, help='server port')
+    args = parser.parse_args()
+    server = ThreadedTCPServer((args.address, args.port), JimTCPHandler)
+    server_log.info('Starting server at {}:{}'.format(args.address, args.port))
     server.serve_forever()

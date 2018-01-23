@@ -24,9 +24,13 @@ class JimResponse:
         except:
             print('Cant read')
             return None
+        print(r)
         self.response['response'] = r['response']
         if r.get('alert'):
             self.response['alert'] = r['alert']
         elif r.get('error'):
             self.response['error'] = r['error']
+        return self.response
+
+    def encode(self):
         return self.response

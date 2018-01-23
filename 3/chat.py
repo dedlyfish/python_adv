@@ -1,6 +1,3 @@
-from message import JimMessage
-
-
 class JimChat:
     def __init__(self, room='#chat'):
         self.room = room
